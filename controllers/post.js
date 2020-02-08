@@ -14,6 +14,7 @@ exports.createPost = async (req, res) =>{
         error: err
       })
     }
-    res.status(200).json({post: dataObj});
+    const {_id, title, body} = dataObj;
+    res.status(200).json({post: {_id, title, body} });
   });
 }
