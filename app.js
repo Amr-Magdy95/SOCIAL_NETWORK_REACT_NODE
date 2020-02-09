@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const expressValidator = require('express-validator');
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
 
 require('dotenv').config();                 // load env variables
 
@@ -28,6 +29,7 @@ app.use(morgan('dev'));
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(expressValidator());
+app.use(cors())
 app.use('/', postRoutes);
 app.use('/', authRoutes);
 app.use('/', userRoutes);
