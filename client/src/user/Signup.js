@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { signup } from '../auth/index.js';
+import {Link} from 'react-router-dom';
 
 class Signup extends Component{
   constructor(props){
@@ -89,7 +90,7 @@ class Signup extends Component{
       <div className="container">
         <h2 className="mt-5 mb-5">Signup</h2>
         {error? (<div className="alert alert-danger">{error}</div>): null }
-        {success? (<div className="alert alert-info">Signup Successful! Please Login.</div>): null }
+        {success? (<div className="alert alert-info">Signup Successful! Please <Link to="/signin">Sign in</Link></div>): null }
 
         {this.signupForm(name, email, password)}
       </div>

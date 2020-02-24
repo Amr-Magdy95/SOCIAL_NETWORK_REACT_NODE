@@ -12,6 +12,11 @@ router.get('/users', userController.allUsers);
 // @access   Protected
 router.get('/user/:userId', requireSignin, userController.getUser);
 
+// @route    GET /user/photo/:userId
+// @desc     Get a user's photo
+// @access   Public
+router.get('/user/photo/:userId',userController.userPhoto);
+
 // @route    PUT /user/:userId
 // @desc     Update a user
 // @access   Private
