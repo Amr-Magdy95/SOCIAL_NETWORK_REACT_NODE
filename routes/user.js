@@ -2,6 +2,16 @@ const router = require('express').Router();
 const userController = require('../controllers/user.js');
 const { requireSignin } = require('../controllers/auth.js');
 
+// @route    PUT /user/follow
+// @desc     Handles following a user
+// @access   protected
+router.put('/user/follow', requireSignin, userController.addFollowing, userController.addFollower);
+
+// @route    PUT /user/unfollow
+// @desc     Handles unfollowing a user
+// @access   protected
+router.put('/user/unfollow', requireSignin, userController.removeFollowing, userController.removeFollower);
+
 // @route    GET /users
 // @desc     Get all users
 // @access   public

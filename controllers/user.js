@@ -5,12 +5,21 @@ const fs = require('fs');
 
 
 exports.userById = async (req, res, next, id) =>{
-  const user = await User.findById(id, (err, data)=>{
-    if (!err){
-      req.profile = data;
-      next();
-    }
-  })
+  const user = await User
+    // populate followers and following
+    .findById(id)
+    .populate('following', '_id name')
+    .populate('followers', '_id name')
+    .exec(
+      (err, data)=>{
+        if (!err){
+          req.profile = data;
+          next();
+        }
+      })
+
+
+
 }
 
 exports.hasAuthorization = (req, res, next) => {
@@ -52,7 +61,7 @@ exports.userPhoto = (req, res, next) =>{
   next();
 }
 
-exports.updateUser = (req, res, next) =>{
+/*exports.updateUser = (req, res, next) =>{
   let user = req.profile
   user = _.extend(user, req.body)    // mutates the user object with req.body props
   user.updated = Date.now();
@@ -66,7 +75,7 @@ exports.updateUser = (req, res, next) =>{
     }
   })
 
-}
+}*/
 
 exports.updateUser = (req, res, next) =>{
   let form = new formidable.IncomingForm();
@@ -114,4 +123,48 @@ exports.deleteUser = async (req, res, next) =>{
       })
     }
   })
+}
+
+// follow
+exports.addFollowing = (req, res, next) => {
+  User.findByIdAndUpdate(req.body.userId, { $push: { following: req.body.followId} }, (err, result) => {
+    if(err){
+      return res.status(400).json({ error: err})
+    }
+    next()
+  })
+}
+
+exports.addFollower = (req, res) => {
+  User.findByIdAndUpdate(req.body.followId, { $push: { followers: req.body.userId} }, { new: true})
+      .populate('following', '_id name')
+      .populate('followers', '_id name')
+      .exec( (err, result)=>{
+        if(err){
+          return res.status(400).json({ error: err})
+        }
+        res.json(result)
+      })
+}
+
+// unfollow
+exports.removeFollowing = (req, res, next) => {
+  User.findByIdAndUpdate(req.body.userId, { $pull: { following: req.body.followId} }, (err, result) => {
+    if(err){
+      return res.status(400).json({ error: err})
+    }
+    next()
+  })
+}
+
+exports.removeFollower = (req, res) => {
+  User.findByIdAndUpdate(req.body.followId, { $pull: { followers: req.body.userId} }, { new: true})
+      .populate('following', '_id name')
+      .populate('followers', '_id name')
+      .exec( (err, result)=>{
+        if(err){
+          return res.status(400).json({ error: err})
+        }
+        res.json(result)
+      })
 }
