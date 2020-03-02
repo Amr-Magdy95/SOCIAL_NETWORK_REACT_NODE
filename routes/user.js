@@ -37,6 +37,11 @@ router.put('/user/:userId',requireSignin, userController.hasAuthorization, userC
 // @access   Private
 router.delete('/user/:userId',requireSignin, userController.hasAuthorization, userController.deleteUser);
 
+// @route    GET /user/findpeople/:userId
+// @desc     Suggest People
+// @access   Private
+router.get("/user/findpeople/:userId", requireSignin, userController.findPeople);
+
 // any route containing userID param our program will first run this function
 router.param("userId", userController.userById)
 
