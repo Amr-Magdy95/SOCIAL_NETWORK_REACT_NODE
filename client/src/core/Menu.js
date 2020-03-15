@@ -29,6 +29,12 @@ const Menu = (props) => {
             <Link to="/signup" className="nav-link" style ={isActive(props.history, '/signup')}>Signup</Link>
           </li></Fragment>) : (<Fragment>
             <li className="nav-item" >
+              <Link className="nav-link" to={`/create/post`} style={isActive(props.history, `/create/post`)}>
+                Create Post
+
+              </Link>
+            </li>
+            <li className="nav-item" >
               <Link className="nav-link" to={`/findpeople`} style={isActive(props.history, `/findpeople`)}>
                 Find People
 

@@ -6,6 +6,7 @@ import DefaultProfile from "../images/avatar.jpg";
 import DeleteUser from "./DeleteUser";
 import FollowProfileButton from "./FollowProfileButton";
 import ProfileTabs from "./ProfileTabs";
+import { listByUser } from "../post/apiPost.js";
 
 class Profile extends React.Component {
   constructor() {
@@ -13,13 +14,14 @@ class Profile extends React.Component {
     this.state = {
       user: { followers: [], following: [] },
       redirectToSignin: false,
-      following: false
+      following: false,
+      posts: []
     };
   }
 
   checkFollow = user => {
     const jwt = isAuthenticated();
-    console.log(jwt)
+    console.log(jwt);
     let match = user.followers.find(follower => {
       return follower._id === jwt.user._id;
     });
@@ -37,11 +39,13 @@ class Profile extends React.Component {
           this.setState({ redirectToSignin: true });
         } else {
           let following = this.checkFollow(data);
-          console.log(following)
+          console.log(following);
           this.setState({
             user: data,
             following: following
           });
+          this.loadPosts(data._id);
+
         }
       });
   };
@@ -60,6 +64,22 @@ class Profile extends React.Component {
           this.setState({ error: data.error });
         } else {
           this.setState({ user: data, following: !this.state.following });
+        }
+      });
+  };
+
+  loadPosts = userId => {
+    const token = isAuthenticated().token;
+    listByUser(userId, token)
+      .then(response => {
+        return response.json();
+      })
+      .then(data => {
+        console.log('here')
+        if (data.error) {
+          console.log(data.error);
+        } else {
+          this.setState({ posts: data });
         }
       });
   };
@@ -87,12 +107,11 @@ class Profile extends React.Component {
       return <Redirect to="/signin" />;
     }
 
-
     return (
       <div className="container">
         <h2 className="mt-4 mb-5">Profile</h2>
         <div className="row">
-          <div className="col-md-6">
+          <div className="col-md-4">
             <img
               style={{ height: "200px", width: "auto", borderRadius: "10px" }}
               className="img-thumbnail"
@@ -101,7 +120,7 @@ class Profile extends React.Component {
               alt={this.state.name}
             />
           </div>
-          <div className="col-md-6 mt-5">
+          <div className="col-md-8 mt-5">
             {user && (
               <div className="lead ml-3">
                 <p>Hello {this.state.user.name}</p>
@@ -113,6 +132,12 @@ class Profile extends React.Component {
             )}
             {user && user._id == this.state.user._id && (
               <div className="d-inline-block mt-5">
+                <Link
+                  className="btn btn-raised btn-info mr-5"
+                  to={`/create/post`}
+                >
+                  Create Post
+                </Link>
                 <Link
                   className="btn btn-raised btn-success mr-5"
                   to={`/user/edit/${this.state.user._id}`}
@@ -128,8 +153,7 @@ class Profile extends React.Component {
                 onButtonClick={this.clickFollowButton}
               />
             )}
-          <hr />
-
+            <hr />
           </div>
         </div>
 
@@ -137,8 +161,11 @@ class Profile extends React.Component {
           <div className="col-md-12 mb-5 mt-5 lead">
             <hr />
             {this.state.user.about} <hr />
-            <ProfileTabs followers={this.state.user.followers} following={this.state.user.following} />
-
+            <ProfileTabs
+              followers={this.state.user.followers}
+              following={this.state.user.following}
+              posts={this.state.posts}
+            />
           </div>
         </div>
       </div>

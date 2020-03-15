@@ -8,6 +8,16 @@ const { requireSignin } = require('../controllers/auth.js');
 // @access  Public
 router.get('/', postController.getPosts);
 
+// @route   GET /post/:postId
+// @desc    Get a single Post
+// @access  Public
+router.get('/post/:postId', postController.singlePost);
+
+// @route    GET /post/photo/:postId
+// @desc     Get a post's photo
+// @access   Public
+router.get('/post/photo/:postId',postController.postPhoto);
+
 // @route   POST /post/new/:userId
 // @desc    Create a new post
 // @access  Private
@@ -22,7 +32,8 @@ router.post(
 // @desc    Get posts of a certain user
 // @access  Private
 router.get(
-  '/post/by/:userId',
+  '/posts/by/:userId',
+  requireSignin,
   postController.postsByUser
 );
 

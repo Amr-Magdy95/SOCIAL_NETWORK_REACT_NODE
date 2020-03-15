@@ -49,7 +49,8 @@ exports.deletePost = (req, res) => {
   })
 }
 
-exports.updatePost = (req, res, next) => {
+/*exports.updatePost = (req, res, next) => {
+
   let post = req.post;
   post = _.extend(post, req.body);
   post.updated = Date.now;
@@ -64,15 +65,62 @@ exports.updatePost = (req, res, next) => {
     }
   });
 
+}*/
+
+exports.updatePost = (req, res, next) =>{
+  let form = new formidable.IncomingForm();
+  form.keepExtensions = true;
+  form.parse(req, (err, fields, files) => {
+    if(err){
+      return res.status(400).json({
+        error: "Photo could not be uploaded"
+      })
+    }else{
+      // save user
+      let post = req.post;
+      post = _.extend(post, fields)
+      //user.updated = Date.now()
+
+      if (files.photo){
+        post.photo.data = fs.readFileSync(files.photo.path)
+        post.photo.contentType = files.photo.type
+      }
+
+      post.save( (err, result) => {
+        if (err){
+          return res.status(400).json({
+            error: err
+          })
+        }else{
+          res.json(post);
+          next()
+        }
+      })
+    }
+  })
 }
 
 exports.getPosts = (req, res) => {
   const posts = Post.find()
   .populate("postedBy", "_id name")
-  .select("_id title body")
-  .then((posts) => res.status(200).json({posts: posts}) )
+  .select("_id title body created")
+  .sort({ created: -1})
+  .then((posts) => res.status(200).json(posts) )
   .catch(err => console.log(err));
 
+}
+
+exports.singlePost = (req, res) => {
+  console.log(req)
+  const post = Post.findById(req.post._id,(error, data)=>{
+    if(error){
+      res.status(400).json({
+        error: error
+      })
+    }else{
+      res.json(data)
+    }
+  })
 }
 
 exports.createPost = (req, res, next) =>{
@@ -119,4 +167,9 @@ exports.postsByUser = (req, res) =>{
           return res.json(posts)
         }
       })
+}
+
+exports.postPhoto = (req, res, next) => {
+  res.set('Content-Type', req.post.photo.contentType)
+  return res.send(req.post.photo.data)
 }
