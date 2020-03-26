@@ -2,6 +2,7 @@ const Post = require('../models/post.js');
 const formidable = require('formidable');
 const fs = require('fs');
 const _ = require('lodash');
+const mongoose = require('mongoose')
 
 exports.postById = async(req, res, next, id) =>{
   Post.findById(id)
@@ -103,7 +104,7 @@ exports.updatePost = (req, res, next) =>{
 exports.getPosts = (req, res) => {
   const posts = Post.find()
   .populate("postedBy", "_id name")
-  .select("_id title body created")
+  .select("_id title body created likes")
   .sort({ created: -1})
   .then((posts) => res.status(200).json(posts) )
   .catch(err => console.log(err));
@@ -173,3 +174,31 @@ exports.postPhoto = (req, res, next) => {
   res.set('Content-Type', req.post.photo.contentType)
   return res.send(req.post.photo.data)
 }
+
+exports.like = (req, res) => {
+    Post.findByIdAndUpdate(req.body.postId, { $push: { likes: req.body.userId } }, { new: true }).exec(
+        (err, result) => {
+            if (err) {
+                return res.status(400).json({
+                    error: err
+                });
+            } else {
+                res.json(result);
+            }
+        }
+    );
+};
+
+exports.unlike = (req, res) => {
+    Post.findByIdAndUpdate(req.body.postId, { $pull: { likes: req.body.userId } }, { new: true }).exec(
+        (err, result) => {
+            if (err) {
+                return res.status(400).json({
+                    error: err
+                });
+            } else {
+                res.json(result);
+            }
+        }
+    );
+};

@@ -3,6 +3,24 @@ const postController = require('../controllers/post.js');
 const userController = require('../controllers/user.js');
 const { requireSignin } = require('../controllers/auth.js');
 
+// @route   Update /post/like
+// @desc    Like a post
+// @access  Private
+router.put(
+  '/post/like',
+  requireSignin,
+  postController.like
+);
+
+// @route   Update /post/unlike
+// @desc    Unlike a post
+// @access  Private
+router.put(
+  '/post/unlike',
+  requireSignin,
+  postController.unlike
+);
+
 // @route   GET /
 // @desc    Get All Posts
 // @access  Public
@@ -56,6 +74,7 @@ router.put(
   postController.isPoster,
   postController.updatePost
 );
+
 
 // any route containing userID param our program will first run this function
 router.param("userId", userController.userById)

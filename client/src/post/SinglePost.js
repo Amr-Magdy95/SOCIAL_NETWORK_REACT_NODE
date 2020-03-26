@@ -1,20 +1,54 @@
 import React, { Component } from "react";
-import { singlePost, remove } from "./apiPost";
+import { singlePost, remove, like, unlike } from "./apiPost";
 import { Link, Redirect } from "react-router-dom";
 import DefaultPostPhoto from "../images/clouds.jpg";
-import { isAuthenticated} from '../auth';
+import { isAuthenticated } from "../auth";
 
 class SinglePost extends Component {
   state = {
     post: "",
-    redirectToHome: false
+    redirectToHome: false,
+    redirectToSignin: false,
+    likes: [],
+    like: false
   };
 
   deleteConfirmed = () => {
-    let answer = window.confirm("Are you sure you want to delete this post?!")
-    if(answer){
+    let answer = window.confirm("Are you sure you want to delete this post?!");
+    if (answer) {
       this.deletePost();
     }
+  };
+
+  likeToggle = () => {
+    if (!isAuthenticated()) {
+      this.setState({ redirectToSignin: true });
+      return false;
+    }
+    let callApi = this.state.like ? unlike : like;
+    const userId =  isAuthenticated() && isAuthenticated().user._id;
+    const postId = this.state.post._id;
+    const token = isAuthenticated().token;
+
+    callApi(userId, token, postId)
+    .then((response)=>{return response.json()})
+    .then(data => {
+      if (data.error) {
+        console.log(data.error);
+      } else {
+        this.setState({
+          like: !this.state.like,
+          likes: data.likes.length
+        });
+      }
+    });
+  };
+
+  checkLike = (likes) =>{
+    const userId =  isAuthenticated() && isAuthenticated().user._id;
+
+    const found =likes.find( like => like === userId) !== undefined
+    return found;
   }
 
   componentDidMount = () => {
@@ -29,7 +63,9 @@ class SinglePost extends Component {
         } else {
           console.log("is post here", data);
           this.setState({
-            post: data
+            post: data,
+            likes: data.likes.length,
+            like: this.checkLike(data.likes)
           });
         }
       });
@@ -39,21 +75,24 @@ class SinglePost extends Component {
     const postId = this.props.match.params.postId;
     const token = isAuthenticated().token;
     remove(postId, token)
-    .then(response => {return response.json()})
-    .then(data => {
-      if(data.error){
-        console.log(data.error)
-      }else{
-        this.setState({
-          redirectToHome: true
-        })
-      }
-    })
-  }
+      .then(response => {
+        return response.json();
+      })
+      .then(data => {
+        if (data.error) {
+          console.log(data.error);
+        } else {
+          this.setState({
+            redirectToHome: true
+          });
+        }
+      });
+  };
 
   renderPost = post => {
     const posterId = post.postedBy ? `/user/${post.postedBy._id}` : "";
     const posterName = post.postedBy ? post.postedBy.name : " Anonymous";
+    const { like, likes } = this.state;
 
     return (
       <div className="card col-md-12">
@@ -64,6 +103,23 @@ class SinglePost extends Component {
           onError={i => (i.target.src = `${DefaultPostPhoto}`)}
           alt={post.title}
         />
+        {like ? (
+          <h3 onClick={this.likeToggle} className="mt-2">
+            <i
+              className="fa fa-thumbs-up text-success bg-dark"
+              style={{ padding: "10px", borderRadius: "50%" }}
+            />{" "}
+            {likes} Like(s)
+          </h3>
+        ) : (
+          <h3 onClick={this.likeToggle} className="mt-2">
+            <i
+              className="fa fa-thumbs-up text-danger bg-dark"
+              style={{ padding: "10px", borderRadius: "50%" }}
+            />{" "}
+            {likes} Like(s)
+          </h3>
+        )}
         <div className="card-body">
           <h5 className="card-header">{post.title}</h5>
           <p className="card-text">{post.body}</p>
@@ -83,12 +139,14 @@ class SinglePost extends Component {
                 <>
                   <Link
                     className="btn btn-raised btn-success btn-sm mr-5"
-                    to = {`/post/edit/${post._id}`}
-
+                    to={`/post/edit/${post._id}`}
                   >
                     Update Post
                   </Link>
-                  <button className="btn btn-raised btn-danger btn-sm" onClick={this.deleteConfirmed} >
+                  <button
+                    className="btn btn-raised btn-danger btn-sm"
+                    onClick={this.deleteConfirmed}
+                  >
                     Delete Post
                   </button>
                 </>
@@ -100,9 +158,12 @@ class SinglePost extends Component {
   };
 
   render() {
-    const { post, redirectToHome } = this.state;
-    if(redirectToHome){
-      return <Redirect to={`/`} />
+    const { post, redirectToHome, redirectToSignin } = this.state;
+    if (redirectToHome) {
+      return <Redirect to={`/`} />;
+    }
+    else if (redirectToSignin) {
+      return <Redirect to={`/signin`} />;
     }
     return (
       <div className="container">
