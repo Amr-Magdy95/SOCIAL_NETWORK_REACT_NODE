@@ -3,6 +3,7 @@ import { singlePost, remove, like, unlike } from "./apiPost";
 import { Link, Redirect } from "react-router-dom";
 import DefaultPostPhoto from "../images/clouds.jpg";
 import { isAuthenticated } from "../auth";
+import Comment from "./Comment";
 
 class SinglePost extends Component {
   state = {
@@ -10,7 +11,8 @@ class SinglePost extends Component {
     redirectToHome: false,
     redirectToSignin: false,
     likes: [],
-    like: false
+    like: false,
+    comments: []
   };
 
   deleteConfirmed = () => {
@@ -26,30 +28,32 @@ class SinglePost extends Component {
       return false;
     }
     let callApi = this.state.like ? unlike : like;
-    const userId =  isAuthenticated() && isAuthenticated().user._id;
+    const userId = isAuthenticated() && isAuthenticated().user._id;
     const postId = this.state.post._id;
     const token = isAuthenticated().token;
 
     callApi(userId, token, postId)
-    .then((response)=>{return response.json()})
-    .then(data => {
-      if (data.error) {
-        console.log(data.error);
-      } else {
-        this.setState({
-          like: !this.state.like,
-          likes: data.likes.length
-        });
-      }
-    });
+      .then(response => {
+        return response.json();
+      })
+      .then(data => {
+        if (data.error) {
+          console.log(data.error);
+        } else {
+          this.setState({
+            like: !this.state.like,
+            likes: data.likes.length
+          });
+        }
+      });
   };
 
-  checkLike = (likes) =>{
-    const userId =  isAuthenticated() && isAuthenticated().user._id;
+  checkLike = likes => {
+    const userId = isAuthenticated() && isAuthenticated().user._id;
 
-    const found =likes.find( like => like === userId) !== undefined
+    const found = likes.find(like => like === userId) !== undefined;
     return found;
-  }
+  };
 
   componentDidMount = () => {
     const postId = this.props.match.params.postId;
@@ -65,7 +69,8 @@ class SinglePost extends Component {
           this.setState({
             post: data,
             likes: data.likes.length,
-            like: this.checkLike(data.likes)
+            like: this.checkLike(data.likes),
+            comments: data.comments
           });
         }
       });
@@ -157,12 +162,15 @@ class SinglePost extends Component {
     );
   };
 
+  updateComments = comments => {
+    this.setState({ comments });
+  };
+
   render() {
     const { post, redirectToHome, redirectToSignin } = this.state;
     if (redirectToHome) {
       return <Redirect to={`/`} />;
-    }
-    else if (redirectToSignin) {
+    } else if (redirectToSignin) {
       return <Redirect to={`/signin`} />;
     }
     return (
@@ -176,6 +184,12 @@ class SinglePost extends Component {
         ) : (
           this.renderPost(post)
         )}
+
+        <Comment
+          postId={post._id}
+          comments={this.state.comments.reverse()}
+          updateComments={this.updateComments}
+        />
       </div>
     );
   }

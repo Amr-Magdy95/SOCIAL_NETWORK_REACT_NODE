@@ -21,6 +21,24 @@ router.put(
   postController.unlike
 );
 
+// @route   Update /post/comment
+// @desc    Comment on  a post
+// @access  Private
+router.put(
+  '/post/comment',
+  requireSignin,
+  postController.comment
+);
+
+// @route   Update /post/uncomment
+// @desc    Remove a comment from a post
+// @access  Private
+router.put(
+  '/post/uncomment',
+  requireSignin,
+  postController.uncomment
+);
+
 // @route   GET /
 // @desc    Get All Posts
 // @access  Public
